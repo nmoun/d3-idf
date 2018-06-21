@@ -24,22 +24,21 @@ fetch('file:///C:/Users/Nicolas/Documents/projects/d3-idf/salaries.json')
 .then(function(cities){
 
   var cities100 = {"type": "FeatureCollection", "features": cities.map(function(val){
-    return {"type":"Feature","id": val.fields.codgeo,"properties":{}, "geometry": val.fields.geo_shape };
+    return {"type":"Feature","id": val.fields.codgeo,"properties":{"title": val.fields.libgeo}, "geometry": val.fields.geo_shape };
   })};
-  // var citiesFormatted = [{"type":"Feature","id":"05089","properties":{},"geometry": cities[0].fields.geo_shape}];
-  var citiesPolygon = cities100;
 
   // Create a unit projection.
   var projection = d3.geoAlbers()
   .scale(1)
-  .translate([0, 0]);
+  .translate([0, 0])
+  .rotate([20,0,0]);
 
   // Create a path generator.
   var path = d3.geoPath()
     .projection(projection);
 
   // Compute the bounds of a feature of interest, then derive scale & translate.
-  var b = path.bounds(citiesPolygon),
+  var b = path.bounds(cities100),
   s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
   t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
 
@@ -50,9 +49,6 @@ fetch('file:///C:/Users/Nicolas/Documents/projects/d3-idf/salaries.json')
   console.log("translate : " + t)	
 
   console.log("petit b : " + path.bounds(cities100.features[0].geometry));
-
-  // console.log(JSON.stringify(citiesFormatted))
-
   // Update the projection to use computed scale & translate.
   projection
   .scale(s)
@@ -64,5 +60,11 @@ fetch('file:///C:/Users/Nicolas/Documents/projects/d3-idf/salaries.json')
   .enter()
   .append("path")
   .attr("d", path)
-  .attr("fill","#999999");
+  .attr("fill","#999999")
+  .append("title")
+  .text(function(d){
+    console.log("d yo " +d)
+    console.log(JSON.stringify(d))
+    return  d.properties.title;
+  });
 });
