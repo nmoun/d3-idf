@@ -13,18 +13,13 @@ fetch('file:///C:/Users/Nicolas/Documents/projects/d3-idf/salaries.json')
 .then(function(cities){
 
   citiesFeaturesCollection = {"type": "FeatureCollection", "features": cities.map(function(val){
-    return {"type":"Feature","id": val.fields.codgeo,"properties":{
-      "title": val.fields.libgeo,
-      "snhmf2614": val.fields.snhmf2614,
-      "snhm2614": val.fields.snhm2614,
-      "snhmh2614": val.fields.snhmh2614,
-      "snhmf1814": val.fields.snhmf1814,
-      "snhm1814": val.fields.snhm1814,
-      "snhmh1814": val.fields.snhmh1814,
-      "snhmf5014": val.fields.snhmf5014,
-      "snhm5014": val.fields.snhm5014,
-      "snhmh5014": val.fields.snhmh5014,
-    }, "geometry": val.fields.geo_shape };
+    var {geo_shape, geo_point_2d, codgeo, ...rest} = val.fields;
+    return {
+      "type":"Feature",
+      "id": codgeo,
+      "properties":rest,
+      "geometry": geo_shape
+    };
   })};
 
   changeAge();
@@ -32,52 +27,53 @@ fetch('file:///C:/Users/Nicolas/Documents/projects/d3-idf/salaries.json')
 });
 
 var max = 1, min = -11, rangeLegend = [600, 1000];
-var xLegend = d3.scaleLinear()
-    .domain([min, max])
-    .rangeRound(rangeLegend);
-
-var xAxis = d3.axisBottom(xLegend)
-    .tickSize(10)
-    .tickValues(d3.range(min + (parseFloat(max)- parseFloat(min))/5, max, (parseFloat(max)- parseFloat(min))/5).map(d => d.toFixed(2)))
-    .tickFormat(function(n) { return n + "€/h"});
 
 var g = svg.append("g")
-.attr("class", "key")
-.attr("transform", "translate(0,40)");
+  .attr("class", "key")
+  .attr("transform", "translate(0,20)");
 
 g.append("text")
   .attr("class", "caption")
-  .attr("x", xLegend.range()[0])
+  .attr("x", rangeLegend[0])
   .attr("y", -6)
   .attr("fill", "#000")
   .attr("text-anchor", "start")
   .attr("font-weight", "bold")
   .text("Difference salaire 2014");
 
-createLinearGradient(min, max);
-
 g.append("rect")
-    .attr("x", xLegend.range()[0])
+    .attr("x", rangeLegend[0])
     .attr("y", 0)
-    .attr("width", xLegend.range()[1]-xLegend.range()[0])
+    .attr("width", rangeLegend[1] - rangeLegend[0])
     .attr("height", 8)
     .style("fill", "url(#linear-gradient)"); 
-
-g.append("g").call(xAxis);
 
 function getAxis(min, max){
   var scale = d3.scaleLinear()
     .domain([min, max])
     .rangeRound(rangeLegend);
 
+  var values = d3.range(min, max, (parseFloat(max)- parseFloat(min))/5).map(d => d.toFixed(2));
+  values.push(parseFloat(max).toFixed(2));
   var xAxis = d3.axisBottom(scale)
     .tickSize(10)
-    .tickValues(d3.range(min + (parseFloat(max)- parseFloat(min))/5, max, (parseFloat(max)- parseFloat(min))/5).map(d => d.toFixed(2)))
+    .tickValues(values)
     .tickFormat(function(n) { return n + "€/h"});
 
   return xAxis;
 }
 
+function updateLegend(min, max){
+  createLinearGradient(min, max);
+  axe = getAxis(min, max);
+  g.selectAll("g").remove();
+  g.append("g").call(axe);
+  g.select('.domain').remove();
+}
+
+/**
+ * Creates the svg linearGradient
+ */
 function createLinearGradient(min, max){
 
   svg.selectAll("defs").remove();
@@ -85,8 +81,6 @@ function createLinearGradient(min, max){
   var positionZero = d3.scaleLinear()
     .domain([min, max])
     .range([0, 100]);
-
-  console.log('percent zero ' + positionZero(0))
     
   var linearGradient = svg.append("defs")
     .append("linearGradient")
@@ -114,7 +108,7 @@ function createLinearGradient(min, max){
 
 function changeAge(){
   var select = document.getElementById("age-select");
-  var value = select.selectedOptions[0].innerText
+  var value = select.selectedOptions[0].value
   var h = "snhmh" + value + "14", f = "snhmf" + value + "14";
 
   // Create a unit projection.
@@ -140,10 +134,9 @@ function changeAge(){
 
   // Update the projection to use computed scale & translate.
   projection
-  .scale(s)
-  .translate(t);
+    .scale(s)
+    .translate(t);
   
-  // var color = d3.scaleLinear(d3.schemeBlues[9]);
   var tmp = citiesFeaturesCollection.features.map(function(v){
     return v.properties[h] - v.properties[f];
   })
@@ -151,55 +144,50 @@ function changeAge(){
   max = Math.max.apply(null, tmp);
   console.log("différence minimum = " + min)
   console.log("différence max = " + max)
-  var color = d3.scaleLinear();
 
+  var color = d3.scaleLinear();
   if(min < 0){
     color.domain([min, 0 ,max])
-    .range(["red", "white", "blue"]);
+      .range(["red", "white", "blue"]);
   } else {
     color.domain([min, max])
-    .range(["white", "blue"]);
+      .range(["white", "blue"]);
   }
 
   console.log("exemple color min: " + color(min))
   console.log("exemple color max: " + color(max))
 
-  // LA LEGENDE
-  createLinearGradient(min, max);
-  // xLegend.domain([min, max])
-  axe = getAxis(min, max);
-  g.selectAll("g").remove();//.attr('transform',"translate(0," + (parseFloat(max)- parseFloat(min))/5 + ")").call(xAxis);
-  g.append("g").call(axe);
-  // legend.call(xAxis);
+  updateLegend(min, max);
 
-  // LA MAP
+  // map generation
   var paths = svg
-      .append('g')
-      .selectAll("path")
-      .filter(function(d){
-        return d.attr('class').indexOf('domain') !== 'domain'
-      })
-      .data(citiesFeaturesCollection.features, function(d) { return d.codgeo; })
-      .attr("fill",function(d){
-        return color(Math.abs(d.properties[h] - d.properties[f]))
-      }); // update
-
+    .selectAll("path")
+    .data(citiesFeaturesCollection.features, function(d) {
+      return d.id;
+    });
+  
   paths
-      .selectAll("title")
-      .text(function(d){
-        return  "up: " + d.properties.title + " : h = " + d.properties[h] + " - f : " + d.properties[f];
-      }); // update title
+    .transition()
+    .duration(500)
+    .attr("fill",function(d){
+      return color(d.properties[h] - d.properties[f])
+    })
+    .selectAll("title")
+    .text(function(d){
+      return d.properties.libgeo + " : h = " + d.properties[h] + " - f : " + d.properties[f];
+    }); // update 
 
   // add
   paths.enter()
-    .append("path").attr("d", path)
+    .append("path")
+    .attr("d", path)
     .attr("stroke", "#555555")
     .attr("fill",function(d){
       return color(d.properties[h] - d.properties[f])
     })
     .append("title")
     .text(function(d){
-      return  d.properties.title + " : h = " + d.properties[h] + " - f : " + d.properties[f];
+      return  d.properties.libgeo + " : h = " + d.properties[h] + " - f : " + d.properties[f];
     });
 
   // remove

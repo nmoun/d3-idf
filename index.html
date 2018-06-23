@@ -9,11 +9,33 @@
 </head>
 <body>
   <select id="age-select" onchange="changeAge()">
-    <option value="18" selected>18</option>
-    <option value="26">26</option>
-    <option value="50">50</option>
+    <optgroup label="Age">
+      <option value="18" selected>18 à 25 ans</option>
+      <option value="26">26 à 50 ans</option>
+      <option value="50">plus de 50 ans</option>
+    </optgroup>
+    <optgroup label="Catégorie socioprofessionnelle">
+      <option value="c">Cadre</option>
+      <option value="p">Profession intermédiaire</option>
+      <option value="e">Employés</option>
+    </optgroup>
+    <!-- <optgroup label="Cadre">
+      <option value="18" selected>18 à 25 ans</option>
+      <option value="26">26 à 50 ans</option>
+      <option value="50">plus de 50 ans</option>
+    </optgroup>
+    <optgroup label="Profession intermédiaire">
+      <option value="18" selected>18 à 25 ans</option>
+      <option value="26">26 à 50 ans</option>
+      <option value="50">plus de 50 ans</option>
+    </optgroup>
+    <optgroup label="Employés">
+      <option value="18" selected>18 à 25 ans</option>
+      <option value="26">26 à 50 ans</option>
+      <option value="50">plus de 50 ans</option>
+    </optgroup> -->
   </select>
-<svg width="3840" height="2160"></svg>
+<svg width="1920" height="1280"></svg>
 <script src="./d3.js"></script>
 <script src="./topojson.js"></script>
 <script src="./index.js"></script>
