@@ -1,43 +1,45 @@
 <html>
+
 <head>
   <meta charset="utf-8">
   <style>
+    @font-face {
+      font-family: "Nasalization";
+      src: url("nasalization-rg.ttf");
+    }
 
-
-</style>
+    .criteria {
+      position: absolute;
+      margin-left: 10px;
+      margin-top: 10px;
+      font-family: 'Nasalization';
+    }
+  </style>
   <title>d3</title>
 </head>
+
 <body>
-  <select id="age-select" onchange="changeAge()">
-    <optgroup label="Age">
-      <option value="18" selected>18 à 25 ans</option>
-      <option value="26">26 à 50 ans</option>
-      <option value="50">plus de 50 ans</option>
-    </optgroup>
-    <optgroup label="Catégorie socioprofessionnelle">
-      <option value="c">Cadre</option>
-      <option value="p">Profession intermédiaire</option>
-      <option value="e">Employés</option>
-    </optgroup>
-    <!-- <optgroup label="Cadre">
-      <option value="18" selected>18 à 25 ans</option>
-      <option value="26">26 à 50 ans</option>
-      <option value="50">plus de 50 ans</option>
-    </optgroup>
-    <optgroup label="Profession intermédiaire">
-      <option value="18" selected>18 à 25 ans</option>
-      <option value="26">26 à 50 ans</option>
-      <option value="50">plus de 50 ans</option>
-    </optgroup>
-    <optgroup label="Employés">
-      <option value="18" selected>18 à 25 ans</option>
-      <option value="26">26 à 50 ans</option>
-      <option value="50">plus de 50 ans</option>
-    </optgroup> -->
-  </select>
-<svg width="1850" height="1280"></svg>
-<script src="./d3.js"></script>
-<script src="./topojson.js"></script>
-<script src="./index.js"></script>
+  <div class="criteria">
+    <p>Age</p>
+    <input type="radio" id="18" name="criteria" value="18" checked>
+    <label for="18">18 to 25</label>
+    <input type="radio" id="26" name="criteria" value="26">
+    <label for="26">26 to 50</label>
+    <input type="radio" id="50" name="criteria" value="50">
+    <label for="50">older than 50</label>
+    <p>Catégorie socioprofessionnelle</p>
+    <input type="radio" id="c" name="criteria" value="c">
+    <label for="c">Cadre</label>
+    <input type="radio" id="p" name="criteria" value="p">
+    <label for="p">Profession intermédiaire</label>
+    <input type="radio" id="e" name="criteria" value="e">
+    <label for="e">Employés</label>
+
+  </div>
+  <svg width="1850" height="1280"></svg>
+  <script src="./d3.js"></script>
+  <script src="./topojson.js"></script>
+  <script src="./index.js"></script>
 </body>
+
 </html>

@@ -5,25 +5,15 @@ height = +svg.attr("height");
 
 var citiesFeaturesCollection = null;
 
-fetch('file:///C:/Users/Nicolas/Documents/projects/d3-idf/salaries.json')
-.then(function(res){
-  if(res.status == 200){ console.log("wat");}
-  return res.json();
-})
-.then(function(cities){
 
-  citiesFeaturesCollection = {"type": "FeatureCollection", "features": cities.map(function(val){
-    var {geo_shape, geo_point_2d, codgeo, ...rest} = val.fields;
-    return {
-      "type":"Feature",
-      "id": codgeo,
-      "properties":rest,
-      "geometry": geo_shape
-    };
-  })};
-
-  changeAge();
-});
+var request = new XMLHttpRequest();
+request.responseType = 'json';
+request.open('GET', 'file:///C:/Users/Nicolas/Documents/projects/d3-idf/salaires.geojson');
+request.send();
+request.onload = function () {
+  citiesFeaturesCollection = request.response;
+  changeCriteria();
+};
 
 var max = 1, min = -11, rangeLegend = [600, 1000];
 
@@ -38,7 +28,8 @@ g.append("text")
   .attr("fill", "#000")
   .attr("text-anchor", "start")
   .attr("font-weight", "bold")
-  .text("Difference salaire hommes/femmes 2014");
+  .attr("font-family", "Nasalization")
+  .text("Différence salaire hommes/femmes 2014");
 
 g.append("rect")
     .attr("x", rangeLegend[0])
@@ -50,6 +41,12 @@ g.append("rect")
 var mapContainer = svg
   .append('g')
   .attr("transform", "translate(0,50)");
+
+
+var radios = document.getElementsByName("criteria");
+for(var i  = 0 ; i < radios.length ;i++){
+  radios[i].onchange = changeCriteria;
+}
 
 createLinearGradient();
 
@@ -115,9 +112,15 @@ function updateLinearGradient(min, max){
     .attr('offset',offset + "%");
 };
 
-function changeAge(){
-  var select = document.getElementById("age-select");
-  var value = select.selectedOptions[0].value
+function changeCriteria(){
+  var radios = document.getElementsByName("criteria");
+  var value = null;
+  for(var i  = 0 ; i < radios.length ;i++){
+    if(radios[i].checked){
+      value = radios[i].value;
+    }
+  }
+  // var value = select.selectedOptions[0].value
   var h = "snhmh" + value + "14", f = "snhmf" + value + "14";
 
   // Create a unit projection.
@@ -169,7 +172,7 @@ function changeAge(){
   var paths = mapContainer
     .selectAll("path")
     .data(citiesFeaturesCollection.features, function(d) {
-      return d.id;
+      return d.properties.codgeo;
     });
   
   paths
