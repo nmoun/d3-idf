@@ -23,7 +23,6 @@ fetch('file:///C:/Users/Nicolas/Documents/projects/d3-idf/salaries.json')
   })};
 
   changeAge();
-
 });
 
 var max = 1, min = -11, rangeLegend = [600, 1000];
@@ -39,7 +38,7 @@ g.append("text")
   .attr("fill", "#000")
   .attr("text-anchor", "start")
   .attr("font-weight", "bold")
-  .text("Difference salaire 2014");
+  .text("Difference salaire hommes/femmes 2014");
 
 g.append("rect")
     .attr("x", rangeLegend[0])
@@ -47,6 +46,12 @@ g.append("rect")
     .attr("width", rangeLegend[1] - rangeLegend[0])
     .attr("height", 8)
     .style("fill", "url(#linear-gradient)"); 
+
+var mapContainer = svg
+  .append('g')
+  .attr("transform", "translate(0,50)");
+
+createLinearGradient();
 
 function getAxis(min, max){
   var scale = d3.scaleLinear()
@@ -64,46 +69,50 @@ function getAxis(min, max){
 }
 
 function updateLegend(min, max){
-  createLinearGradient(min, max);
+  updateLinearGradient(min, max);
   axe = getAxis(min, max);
   g.selectAll("g").remove();
   g.append("g").call(axe);
   g.select('.domain').remove();
 }
 
-/**
- * Creates the svg linearGradient
- */
-function createLinearGradient(min, max){
-
+function createLinearGradient(){
   svg.selectAll("defs").remove();
+    
+  linearGradient = svg.append("defs")
+    .append("linearGradient")
+    .attr("id", "linear-gradient");
+
+  linearGradient.append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", '#cc0000');
+
+  linearGradient.append("stop")
+    .attr("offset", "50%")
+    .attr("stop-color", '#ffffff');
+
+  linearGradient.append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", '#0066ff');
+}
+
+function updateLinearGradient(min, max){
   
   var positionZero = d3.scaleLinear()
     .domain([min, max])
     .range([0, 100]);
     
-  var linearGradient = svg.append("defs")
-    .append("linearGradient")
-    .attr("id", "linear-gradient");
+  var linearGradient = svg.select("linearGradient");
 
-  if(min < 0){
-    linearGradient.append("stop")
-      .attr("offset", "0%")
-      .attr("stop-color", '#cc0000');
-
-    var offset = positionZero(0)
-    linearGradient.append("stop")
-      .attr("offset", offset + "%")
-      .attr("stop-color", '#ffffff');
-  } else {
-    linearGradient.append("stop")
-      .attr("offset", "0%")
-      .attr("stop-color", '#ffffff');
-  }
-
-  linearGradient.append("stop")
-    .attr("offset", "100%")
-    .attr("stop-color", '#0066ff');
+  var offset = Math.max(positionZero(0), 0)
+  linearGradient
+    .selectAll("stop")
+    .filter(function(){
+      return this.getAttribute('stop-color') == '#ffffff'
+    })
+    .transition()
+    .duration(1000)
+    .attr('offset',offset + "%");
 };
 
 function changeAge(){
@@ -154,13 +163,10 @@ function changeAge(){
       .range(["white", "blue"]);
   }
 
-  console.log("exemple color min: " + color(min))
-  console.log("exemple color max: " + color(max))
-
   updateLegend(min, max);
 
   // map generation
-  var paths = svg
+  var paths = mapContainer
     .selectAll("path")
     .data(citiesFeaturesCollection.features, function(d) {
       return d.id;
