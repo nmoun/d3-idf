@@ -5,7 +5,6 @@ height = +svg.attr("height");
 
 var citiesFeaturesCollection = null;
 
-
 var request = new XMLHttpRequest();
 request.responseType = 'json';
 request.open('GET', 'file:///C:/Users/Nicolas/Documents/projects/d3-idf/salaires.geojson');
@@ -21,6 +20,7 @@ var g = svg.append("g")
   .attr("class", "key")
   .attr("transform", "translate(0,20)");
 
+// Title
 g.append("text")
   .attr("class", "caption")
   .attr("x", rangeLegend[0])
@@ -28,9 +28,9 @@ g.append("text")
   .attr("fill", "#000")
   .attr("text-anchor", "start")
   .attr("font-weight", "bold")
-  .attr("font-family", "Nasalization")
-  .text("Différence salaire hommes/femmes 2014");
+  .text("Gender pay gape (Insee 2014)");
 
+// Gradient legend
 g.append("rect")
     .attr("x", rangeLegend[0])
     .attr("y", 0)
@@ -50,6 +50,34 @@ for(var i  = 0 ; i < radios.length ;i++){
 
 createLinearGradient();
 
+/**
+ * Creates and insert gradient legend
+ */
+function createLinearGradient(){
+  svg.selectAll("defs").remove();
+    
+  linearGradient = svg.append("defs")
+    .append("linearGradient")
+    .attr("id", "linear-gradient");
+
+  linearGradient.append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", '#11cc00');
+
+  linearGradient.append("stop")
+    .attr("offset", "50%")
+    .attr("stop-color", '#ffffff');
+
+  linearGradient.append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", '#ff4400');
+}
+
+/**
+ * Returns salary difference axis
+ * @param {Number} min - minimum salary difference found in IDF
+ * @param {Number} max - maximum salary difference found in IDF
+ */
 function getAxis(min, max){
   var scale = d3.scaleLinear()
     .domain([min, max])
@@ -65,34 +93,23 @@ function getAxis(min, max){
   return xAxis;
 }
 
-function updateLegend(min, max){
+/**
+ * Update salary difference axis
+ * @param {Number} min - minimum salary difference found in IDF 
+ * @param {Number} max - maximum salary difference found in IDF 
+ */
+function updateAxis(min, max){
   updateLinearGradient(min, max);
   axe = getAxis(min, max);
   g.selectAll("g").remove();
   g.append("g").call(axe);
-  g.select('.domain').remove();
 }
 
-function createLinearGradient(){
-  svg.selectAll("defs").remove();
-    
-  linearGradient = svg.append("defs")
-    .append("linearGradient")
-    .attr("id", "linear-gradient");
-
-  linearGradient.append("stop")
-    .attr("offset", "0%")
-    .attr("stop-color", '#cc0000');
-
-  linearGradient.append("stop")
-    .attr("offset", "50%")
-    .attr("stop-color", '#ffffff');
-
-  linearGradient.append("stop")
-    .attr("offset", "100%")
-    .attr("stop-color", '#0066ff');
-}
-
+/**
+ * Offsets the white mark (indicating equality in salary) on the salary difference axis
+ * @param {Number} min - minimum salary difference found in IDF 
+ * @param {Number} max - maximum salary difference found in IDF 
+ */
 function updateLinearGradient(min, max){
   
   var positionZero = d3.scaleLinear()
@@ -101,7 +118,8 @@ function updateLinearGradient(min, max){
     
   var linearGradient = svg.select("linearGradient");
 
-  var offset = Math.max(positionZero(0), 0)
+  // zero meaning equality, as in 0 difference in salary
+  var offset = positionZero(0)
   linearGradient
     .selectAll("stop")
     .filter(function(){
@@ -110,8 +128,11 @@ function updateLinearGradient(min, max){
     .transition()
     .duration(1000)
     .attr('offset',offset + "%");
-};
+}
 
+/**
+ * Main function: called once the file is read or when a radio input is changed.
+ */
 function changeCriteria(){
   var radios = document.getElementsByName("criteria");
   var value = null;
@@ -125,24 +146,20 @@ function changeCriteria(){
 
   // Create a unit projection.
   var projection = d3.geoAlbers()
-  .scale(1)
-  .translate([0, 0])
-  .rotate([20,0,0]);
+    .scale(1)
+    .translate([0, 0])
+    .rotate([20,0,0]);
 
   // Create a path generator.
   var path = d3.geoPath()
     .projection(projection);
 
-  // Compute the bounds of a feature of interest, then derive scale & translate.
+  // Compute the bounds.
   var b = path.bounds(citiesFeaturesCollection),
-  s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
-  t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
+    s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
+    t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
 
   console.log(JSON.stringify(citiesFeaturesCollection))
-
-  // console.log("b: " + b)	
-  // console.log("scale : " + s)	
-  // console.log("translate : " + t)	
 
   // Update the projection to use computed scale & translate.
   projection
@@ -152,29 +169,30 @@ function changeCriteria(){
   var tmp = citiesFeaturesCollection.features.map(function(v){
     return v.properties[h] - v.properties[f];
   })
-  min = Math.min.apply(null, tmp);
-  max = Math.max.apply(null, tmp);
+  var min = Math.min.apply(null, tmp);
+  var max = Math.max.apply(null, tmp);
   console.log("différence minimum = " + min)
   console.log("différence max = " + max)
 
   var color = d3.scaleLinear();
   if(min < 0){
     color.domain([min, 0 ,max])
-      .range(["red", "white", "blue"]);
+      .range(["#11cc00", "white", "#ff4400"]);
   } else {
     color.domain([min, max])
-      .range(["white", "blue"]);
+      .range(["white", "#ff4400"]);
   }
 
-  updateLegend(min, max);
+  updateAxis(min, max);
 
-  // map generation
+  // map generation: draw towns' frontiers
   var paths = mapContainer
     .selectAll("path")
     .data(citiesFeaturesCollection.features, function(d) {
       return d.properties.codgeo;
     });
   
+  // update color for each town
   paths
     .transition()
     .duration(500)
@@ -184,7 +202,7 @@ function changeCriteria(){
     .selectAll("title")
     .text(function(d){
       return d.properties.libgeo + " : h = " + d.properties[h] + " - f : " + d.properties[f];
-    }); // update 
+    });
 
   // add
   paths.enter()
