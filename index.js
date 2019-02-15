@@ -7,7 +7,7 @@ var citiesFeaturesCollection = null;
 
 var request = new XMLHttpRequest();
 request.responseType = 'json';
-request.open('GET', 'file:///C:/Users/Nicolas/Documents/projects/d3-idf/salaires.geojson');
+request.open('GET', 'https://nmoun.github.io/d3-idf/salaires.geojson');
 request.send();
 request.onload = function () {
   citiesFeaturesCollection = request.response;
